@@ -2,6 +2,7 @@ import copy
 
 
 class BingoBoard:
+    finished = False
     card = []
     marked = [
         [False, False, False, False, False],
@@ -14,16 +15,20 @@ class BingoBoard:
     def check_board(self):
         for row in self.marked:
             if self.check_row(row):
+                self.finished = True
                 return True
 
         for i in range(0, 5):
             if self.check_column(i):
+                self.finished = True
                 return True
 
         if self.check_up_down_diagonal():
+            self.finished = True
             return True
 
-        return self.check_down_up_diagonal();
+        self.finished = self.check_down_up_diagonal()
+        return self.finished
 
     def check_row(self, row):
         return not False in row
@@ -99,10 +104,8 @@ if __name__ == '__main__':
     boards = get_boards(splitlines)
     for call in bingo_calls:
         for board in boards:
-            board.mark(call)
-            if board.check_board():
-                i = board.sum_unmarked() * int(call)
-                print(i)
-                exit(0)
-
-
+            if not board.finished:
+                board.mark(call)
+                if board.check_board():
+                    i = board.sum_unmarked() * int(call)
+                    print(i)
