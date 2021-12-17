@@ -1,66 +1,46 @@
-TEST_INPUT="test_input.txt"
-INPUT="input.txt"
-def get_input(input_file_name):
-    ret = []
-    lines = open(input_file_name, "r").readlines()
-    for line in lines:
-        line = line.strip()
-        start_and_end = line.split(" -> ")
-        if len(start_and_end) != 2:
-            continue
-        print(start_and_end)
-        start = start_and_end[0]
-        end = start_and_end[1]
-        start_coord = start.split(",")
-        end_coord = end.strip().split(",")
-        if start_coord[0] != end_coord[0] and start_coord[1] == end_coord[1]:
-            print(start_coord)
-            incrementer = 0
-            if int(start_coord[0]) > int(end_coord[0]):
-                incrementer = -1
-            else:
-                incrementer = 1
-            i = int(start_coord[0])
-            while i != int(end_coord[0]) + incrementer:
-                ret.append((i, int(end_coord[1])))
-                i += incrementer
-        if start_coord[1] != end_coord[1] and start_coord[0] == end_coord[0]:
-            incrementer = 0
-            if int(start_coord[1]) > int(end_coord[1]):
-                incrementer = -1
-            else:
-                incrementer = 1
-            i = int(start_coord[1])
-            while i != int(end_coord[1]) + incrementer:
-                ret.append((int(start_coord[0]), i))
-                i += incrementer
-    return ret
+import numpy as np
 
+readlines = open("input.txt", "r").readlines()
+data = readlines
+data1 = readlines
 
-def run():
-    array = [[0]*1000 for _ in range(1000)]
-    #  coordinates = get_input(TEST_INPUT)
+# get(x1, y1, x2, y2)
+coordinates = []
+for d in data:
+    x1, y1, x2, y2 = list(map(int, d.replace(" -> ", ",").split(",")))
+    coordinates.append((x1, y1, x2, y2))
 
-    coordinates = get_input(INPUT)
-    for coor in coordinates: print(coor)
-    for coordinate in coordinates:
-        y = coordinate[1]
-        x = coordinate[0]
-    #      while y >= len(array) - 1:
-    #          array.append([])
-    #
-    #      while x >= len(array[y]) - 1:
-    #          array[y].append(0)
-        array[y][x] += 1
-    output = 0
-    for row in array:
-        print(row)
-        for col in row:
-            if col > 1:
-                output += 1
-    
-    print(output)
+coordinates = np.array(coordinates)
+mxx,mxy = coordinates[[0, 2]].max(), coordinates[[1, 3]].max()
 
+board = np.zeros((mxx*2, mxy*2))
 
-if __name__ == "__main__":
-    run()
+# check only horizontal or vertical line
+m1 = coordinates[:, 0]==coordinates[:, 2]
+m2 = coordinates[:, 1]==coordinates[:, 3]
+m = m1 | m2
+
+masked = coordinates[m]
+for co in masked:
+    for x in range(min(co[0], co[2]), max(co[0], co[2])+1):
+        for y in range(min(co[1], co[3]), max(co[1], co[3])+1):
+            board[x, y] += 1
+print((board.flatten()>1).sum())
+
+# diagonal line
+m1 = coordinates[:, 0]!=coordinates[:, 2]
+m2 = coordinates[:, 1]!=coordinates[:, 3]
+m=m1*m2
+masked = coordinates[m]
+
+for co in masked:
+    # add or sub to x1?
+    dx = int(co[2]>co[0]) or -1
+    dy = int(co[3]>co[1]) or -1
+
+    for dp in range(abs(co[2]-co[0])+1):
+        x = co[0]+dx*dp
+        y = co[1]+dy*dp
+        board[x,y]+=1
+
+print((board.flatten()>1).sum())
